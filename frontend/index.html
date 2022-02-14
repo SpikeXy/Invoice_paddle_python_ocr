@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FilePond Plugin Image Preview Demo</title>
+    <link
+      href="https://unpkg.com/filepond/dist/filepond.css"
+      rel="stylesheet"
+    />
+    <link href="./dist/filepond-plugin-image-preview.css" rel="stylesheet" />
+    <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+  </head>
+  <body>
+     <h1>发票识别</h1>
+    <h3>文件上传 (上传允许格式 jpg , png , pdf)</h3>
+    <input type="file" id="input-file-image" />
+    <script src="https://unpkg.com/filepond-plugin-file-metadata/dist/filepond-plugin-file-metadata.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-crop/dist/filepond-plugin-image-crop.js"></script>
+    <script src="./dist/filepond-plugin-pdf-preview.js"></script>
+    <script src="./dist/filepond-plugin-image-preview.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.js"></script>
+    <script>
+      // Register the plugin with FilePond
+      FilePond.registerPlugin(
+        FilePondPluginFileMetadata,
+        FilePondPluginImageCrop,
+        FilePondPluginImagePreview,
+        FilePondPluginPdfPreview,
+        FilePondPluginFileValidateType, // 文件类型验证
+        FilePondPluginFileValidateSize // 文件大小限制
+      ); 
+      FilePond.setOptions({
+        // endpoint，后端地址
+        server: {
+          url: "http://127.0.0.1:5000",
+          timeout: 60000,
+          process: {
+            url: "/invoice",
+            method: "POST",
+            withCredentials: false,
+            onload: (response) => {
+              let result = JSON.parse(response)
+              // alert("发票代码:             "+result.invoice_code + 
+              // "\n"+"发票号码:             "+result.invoice_number +
+              // "\n"+"开票日期:             "+result.invoice_date +
+              // "\n"+"校验码:               "+result.invoice_validate_code +
+              // "\n"+"合计金额:             "+result.invoice_money +
+              // "\n"+"销售方纳税人识别号:   "+result.taxpayer_number +
+              // "\n"+"销售方名称:           "+result.taxpayer_name 
+              // )
+              var content = "<ul>" +
+                            "<li>发票代码: "+ result.invoice_code  +"</li>" +
+                            "<li>发票号码: "+ result.invoice_number  +"</li>" +
+                            "<li>开票日期: "+ result.invoice_date  +"</li>" +
+                            "<li>校验码: "+ result.invoice_validate_code  +"</li>" +
+                            "<li>合计金额: "+ result.invoice_money  +"</li>" +
+                            "<li>销售方纳税人识别号: "+ result.taxpayer_number  +"</li>" +
+                            "<li>销售方名称: "+ result.taxpayer_name  +"</li></ul>" ;
+              var dom =  document.getElementById("ocr-content");
+              dom.innerHTML = content;
+              // console.log(response);
+              //在页面上显示
+              
+            },
+            onerror: (response) => {
+              // console.log("error custom")
+              // console.log(response);
+            },
+          },
+        },
+        allowImagePreview: true,
+        imagePreviewMinHeight: 600,
+        imagePreviewMaxHeight: 900,
+         allowFileTypeValidation: true, // 文件类型验证
+        acceptedFileTypes: [
+          "image/jpeg",
+          "image/png",
+          "image/jpg",
+          "application/pdf",
+        ], // 支持的文件类型
+      });
+      // Get a reference to the file input element
+      const inputElement = document.getElementById("input-file-image");
+      FilePond;
+      // Create the FilePond instance
+      const pond = FilePond.create(inputElement, {
+        allowFileSizeValidation: true, // 启用文件大小限制
+        maxFileSize: "10000KB", // 单个文件大小限制
+        maxTotalFileSize: "20MB", // 所有文件的总大小限制
+        imageCropAspectRatio: "1:1",
+        fileMetadataObject: {
+          markup: [
+            [
+              "rect",
+              {
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "1280px",
+                height: "600px",
+                backgroundColor: "rgba(0,0,0,.5)",
+              },
+            ],
+            [
+              "image",
+              {
+                right: "10px",
+                bottom: "10px",
+                width: "128px",
+                height: "34px",
+                src: "./upload.svg",
+                fit: "contain",
+              },
+            ],
+          ],
+        },
+      });
+       // pond.addFile("./beach.jpeg");
+    </script>
+    
+     <div>
+      <h1>API 请求格式</h1>
+      <ul>
+        <li>
+          url:  http://192.168.10.240:8082/fileupload/
+        </li>
+        <li>
+          请求参数：form-data ，文件名FileName参数固定为filepond， 参考 <a href="https://www.cnblogs.com/lhlong/p/10773877.html">通过API上传文件</a>
+        </li>
+      </ul>
+    </div>
+
+    <h1>识别结果</h1>
+    <div id="ocr-content">
+      
+    </div>
+</body>
+</html>
